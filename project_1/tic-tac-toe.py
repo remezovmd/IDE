@@ -1,11 +1,15 @@
-"""Игра крестики-нолики в консоли.
+"""Tic-tac-toe in console
 """
 import numpy as np
+import os
+
+clear = lambda: os.system('cls')
 
 PlayingField = []
+WinLines = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]
 
 def clearPlayingField():
-    """Отчистить игровое поле
+    """Clear playing feild
     Args:
         None
     Returns:
@@ -17,7 +21,7 @@ def clearPlayingField():
                     ['-','-','-']]
 
 def printPlayingField():
-    """Отобразить игровое поле
+    """Print playing feild
     Args:
         None
     Returns:
@@ -25,61 +29,105 @@ def printPlayingField():
     """
     
     strNum = 0
-    print(' ',0,1,2)
+    clear()
+    print('  |',0,1,2)
+    print('__|_______')
     for string in PlayingField:
-        print(strNum,*string)
+        print(strNum,'|',*string)
         strNum += 1
         
-def setXO(sym:str, x:int, y:int):
-    """Установить Х или О на игровое поле
+def setXO(sym:str, x:int, y:int) -> bool:
+    """Set Х or О to playing field
     Args:
-        sym (str): Символ (крестик или нолик)
-        x (int): координата по горизонтали
-        y (int): координата по вертикали
+        sym (str): Symbol (X or O)
+        x (int): coord by horizon
+        y (int): coord by vertical
+    Returns:
+        Boolean
+    """
+    if PlayingField[int(x)][int(y)] not in ['X', 'O']:
+        PlayingField[int(x)][int(y)] = sym
+        return True
+    return False
+
+def checkForWin(sym: str) -> bool:
+    """Check for win
+    Args:
+        sym (str): 'X' or 'O'
+    Returns:
+        Boolean
+    """
+    PlayingLine = np.array(sum(PlayingField, []))
+    for i in WinLines:
+        if PlayingLine[i[0]] == PlayingLine[i[1]] == PlayingLine[i[2]] == sym:
+            print(f'Победа {sym}!')
+            return True
+    if len(np.where(PlayingLine == '-')[0]) == 0:
+        print('Ничья!')
+        return True
+    return False
+
+def doTurn(sym: str):
+    """Do turn by "AI"
+    Args:
+        sym (str): 'X' or 'O'
     Returns:
         None
     """
-    
-    PlayingField[int(y)][int(x)] = sym
-
-def check() -> str:
-    """Проверить не победил ли один из игроков
-    Args:
-        None
-    Returns:
-        'X' or 'O' or None
-    """
-    
-    for i in range(2):
-        if PlayingField[i][0] == PlayingField[i][1] == PlayingField[i][2] in ['x', 'o']:
-            return PlayingField[i][0]
-        if PlayingField[0][i] == PlayingField[1][i] == PlayingField[2][i] in ['x', 'o']:
-            return PlayingField[0][i]
-    if PlayingField[0][0] == PlayingField[1][1] == PlayingField[2][2] in ['x', 'o']:
-            return PlayingField[1][1]
-    if PlayingField[0][2] == PlayingField[1][1] == PlayingField[2][0] in ['x', 'o']:
-        return PlayingField[1][1]
-    
-def check_2():
-    strCount = len(PlayingField)
-    if len(set([PlayingField[i][i] for i in range(strCount)])) == 1 and PlayingField[0][0] in ['x', 'o']:
-        return PlayingField[0][0]
-    if len(set([PlayingField[i][strCount-i-1] for i in range(strCount)])) == 1 and PlayingField[0][strCount-1] in ['x', 'o']:
-        return PlayingField[0][strCount-1]
-
-
+    Antysym = 'O' if sym == 'X' else 'X'
+    PlayingLine = np.array(sum(PlayingField, []))
+    Pos = int(np.random.choice(np.where(PlayingLine == '-')[0]))
+    Result = [Pos // 3, Pos % 3]
+    for WinLine in WinLines:
+        rowSym = list(filter(lambda item: item == sym, PlayingLine[WinLine]))
+        rowAntysym = list(filter(lambda item: item == Antysym, PlayingLine[WinLine]))
+        Index = np.where(PlayingLine[WinLine] == '-')[0]
+        if len(rowAntysym) == 2 and len(Index) == 1:
+            Pos = WinLine[Index[0]]
+            Result = [Pos // 3, Pos % 3]
+        if len(rowSym) == 2 and len(Index) == 1:
+            Pos = WinLine[Index[0]]
+            Result = [Pos // 3, Pos % 3]
+    setXO(sym, *Result)
+    printPlayingField()
+                
 def start():
+    """Perform main cycle
+    Args:
+        None
+    Returns:
+        None
+    """
+    sym = 'X'
+    playerSym = 'X'
+    players = int(input('1 или 2 игрока? ')) or 1
+    if players == 1: 
+        if input('X или O? ') in ['O','o','0','О','о']: 
+            playerSym = 'O'
+        else: 
+            playerSym = 'X' 
     clearPlayingField()    
     printPlayingField()
-    sym = 'X'
-    while True:
-        setXO(sym, *str(input(f'Куда поставить {sym} (x y): ')).split())
-        sym = 'O' if sym == 'X' else 'X'
-        printPlayingField()
-        win = check()
-        if win:
-            print(f'Победа {win}!')
-            break
+    while True:    
+        if sym == playerSym or players > 1:
+            try:
+                if setXO(sym, *str(input(f'Куда поставить {sym} (x y): ')).split()):
+                    printPlayingField()
+                    winer = checkForWin(sym)
+                    if winer: break
+                    sym = 'O' if sym == 'X' else 'X'
+                else:
+                    print('Клетка занята.')
+                    continue
+            except Exception as e:
+                print('Не удалось распознать координаты.', e)
+                continue
+        if players == 1:
+            doTurn(sym)
+            winer = checkForWin(sym)
+            if winer: break
+            sym = 'O' if sym == 'X' else 'X'
+        
 
 if __name__ == '__main__':
     start()
