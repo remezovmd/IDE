@@ -6,3 +6,4 @@ From the [SkillFactory Data Scince course](https://skillfactory.ru/data-scintist
 
 * [Проект 0. Игра: Угадай число](https://github.com/remezovmd/IDE/tree/main/project_0)
 * [Проект 1. Игра: Крестики-нолики](https://github.com/remezovmd/IDE/tree/main/project_1)
+* [Проект 2. Телеграм бот](https://github.com/remezovmd/IDE/tree/main/project_2)
